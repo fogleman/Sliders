@@ -69,17 +69,8 @@ LevelView.prototype.createWall = function(parent, a, b) {
         .attr("y2", y + dy)
         .attr("stroke", "black")
         .attr("stroke-width", WALL_SIZE)
+        .attr("stroke-linecap", "round")
         ;
-    parent.append("circle")
-        .attr("cx", x - dx)
-        .attr("cy", y - dy)
-        .attr("r", WALL_SIZE / 2)
-        .attr("fill", "black");
-    parent.append("circle")
-        .attr("cx", x + dx)
-        .attr("cy", y + dy)
-        .attr("r", WALL_SIZE / 2)
-        .attr("fill", "black");
 }
 
 LevelView.prototype.createBoard = function(parent) {
@@ -123,6 +114,23 @@ LevelView.prototype.createBoard = function(parent) {
         var b = level.xy(wall[1]);
         this.createWall(parent, a, b);
     }
+}
+
+LevelView.prototype.createSelection = function(parent, point) {
+    var selection = parent.append("g");
+    selection.append("circle")
+        .attr("cx", 0.5)
+        .attr("cy", 0.5)
+        .attr("r", 0.41)
+        .attr("fill", "none")
+        .attr("stroke", "#7a787d")
+        .attr("stroke-width", 0.01)
+        .attr("stroke-dasharray", "0.05,0.05")
+        ;
+    selection
+        .attr("transform", "translate(" + point.x + "," + point.y + ")")
+        ;
+    return selection;
 }
 
 LevelView.prototype.createPiece = function(parent, point, color) {
@@ -172,7 +180,7 @@ LevelView.prototype.createLevel = function(parent) {
     parent.attr("viewBox", "-1 -1 " + w + " " + h);
     var group = parent.append("g");
     this.createBoard(group);
-    // this.createCellLabels(group);
+    this.createCellLabels(group);
     for (var i = 0; i < level.extras.length; i++) {
         var point = level.xy(level.extras[i]);
         var piece = this.createPiece(group, point, EXTRA);
@@ -190,6 +198,8 @@ LevelView.prototype.createLevel = function(parent) {
         var target = this.createTarget(group, point, color);
         this.targets.push(target);
     }
+    var point = level.xy(level.sources[0]);
+    this.createSelection(group, point);
     return;
     for (var i = 0; i < level.sources.length; i++) {
         var a = level.xy(level.sources[i]);
