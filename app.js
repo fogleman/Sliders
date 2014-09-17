@@ -1,3 +1,4 @@
+// CONSTANTS
 var COLORS = [
     "#e1283f",
     "#eb7e28",
@@ -8,11 +9,13 @@ var COLORS = [
 
 var EXTRA = "#7a787d";
 
-var WALL_SIZE = 0.10;
-var LINE_SIZE = 0.01;
+var WALL_SIZE = 0.1;
+var LINE_SIZE = 0.005;
 
-function Level(level) {
-    _.extend(this, level);
+
+// Level
+function Level(data) {
+    _.extend(this, data);
 }
 
 Level.prototype.xy = function(index) {
@@ -21,7 +24,18 @@ Level.prototype.xy = function(index) {
     return {x: x, y: y};
 }
 
-function createCellLabels(parent, level) {
+
+// LevelView
+function LevelView(parent, level) {
+    this.level = level;
+    this.sources = [];
+    this.targets = []
+    this.extras = [];
+    this.createLevel(parent);
+}
+
+LevelView.prototype.createCellLabels = function(parent) {
+    var level = this.level;
     var n = level.width * level.height;
     for (var i = 0; i < n; i++) {
         var point = level.xy(i);
@@ -37,7 +51,7 @@ function createCellLabels(parent, level) {
     }
 }
 
-function createWall(parent, a, b) {
+LevelView.prototype.createWall = function(parent, a, b) {
     var x = (a.x + b.x) / 2 + 0.5;
     var y = (a.y + b.y) / 2 + 0.5;
     var dx = 0;
@@ -68,7 +82,8 @@ function createWall(parent, a, b) {
         .attr("fill", "black");
 }
 
-function createBoard(parent, level) {
+LevelView.prototype.createBoard = function(parent) {
+    var level = this.level;
     var grid = parent.append("g");
     for (var x = 1; x < level.width; x++) {
         grid.append("line")
@@ -106,11 +121,11 @@ function createBoard(parent, level) {
         var wall = level.walls[i];
         var a = level.xy(wall[0]);
         var b = level.xy(wall[1]);
-        createWall(parent, a, b);
+        this.createWall(parent, a, b);
     }
 }
 
-function createPiece(parent, point, color) {
+LevelView.prototype.createPiece = function(parent, point, color) {
     var piece = parent.append("g");
     piece.append("circle")
         .attr("cx", 0.5)
@@ -129,60 +144,75 @@ function createPiece(parent, point, color) {
     piece
         .attr("transform", "translate(" + point.x + "," + point.y + ")")
         ;
-    if (color === EXTRA) {
-        return;
-    }
-    piece
-        .transition()
-        .duration(500)
-        .attrTween("transform", function() {
-            var a = "translate(" + point.x + "," + point.y + ")";
-            var b = "translate(" + point.x + "," + (point.y + 4) + ")";
-            return d3.interpolate(a, b);
-        })
-        ;
+    return piece;
 }
 
-function createTarget(parent, point, color) {
+LevelView.prototype.createTarget = function(parent, point, color) {
     var target = parent.append("g");
-    for (var r = 0.35; r > 0; r -= 0.125) {
+    for (var r = 0.25; r > 0; r -= 0.125) {
         target.append("circle")
-            .attr("cx", point.x + 0.5)
-            .attr("cy", point.y + 0.5)
+            .attr("cx", 0.5)
+            .attr("cy", 0.5)
             .attr("r", r)
             .attr("fill", "white")
             .attr("stroke", color)
-            .attr("stroke-width", 0.06)
+            .attr("stroke-width", 0.08)
             ;
     }
+    target
+        .attr("transform", "translate(" + point.x + "," + point.y + ")")
+        ;
+    return target;
 }
 
-function createLevel(view, level) {
+LevelView.prototype.createLevel = function(parent) {
+    var level = this.level;
     var w = level.width + 2;
     var h = level.height + 2;
-    view.attr("viewBox", "-1 -1 " + w + " " + h);
-    createBoard(view, level);
-    createCellLabels(view, level);
+    parent.attr("viewBox", "-1 -1 " + w + " " + h);
+    var group = parent.append("g");
+    this.createBoard(group);
+    // this.createCellLabels(group);
     for (var i = 0; i < level.extras.length; i++) {
         var point = level.xy(level.extras[i]);
-        createPiece(view, point, EXTRA);
+        var piece = this.createPiece(group, point, EXTRA);
+        this.extras.push(piece);
     }
     for (var i = 0; i < level.sources.length; i++) {
         var point = level.xy(level.sources[i]);
         var color = COLORS[i];
-        createPiece(view, point, color);
+        var piece = this.createPiece(group, point, color);
+        this.sources.push(piece);
     }
     for (var i = 0; i < level.targets.length; i++) {
         var point = level.xy(level.targets[i]);
         var color = COLORS[i];
-        createTarget(view, point, color);
+        var target = this.createTarget(group, point, color);
+        this.targets.push(target);
+    }
+    return;
+    for (var i = 0; i < level.sources.length; i++) {
+        var a = level.xy(level.sources[i]);
+        var b = level.xy(level.targets[i]);
+        var piece = this.sources[i];
+        piece
+            .transition()
+            .duration(500)
+            .attrTween("transform", function() {
+                var t1 = "translate(" + a.x + "," + a.y + ")";
+                var t2 = "translate(" + b.x + "," + b.y + ")";
+                return d3.interpolate(t1, t2);
+            })
+            ;
     }
 }
 
+
+// main
 function main() {
     var level = new Level(levels[0]);
     var view = d3.select("#view");
-    createLevel(view, level);
+    var level_view = new LevelView(view, level);
 }
 
 main();

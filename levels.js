@@ -19,15 +19,6 @@ var levels = [
         moves: 30,
         sources: [1],
         targets: [12],
-        extras: [10, 14],
-        shape: [
-            "..xxx..",
-            "..xxx..",
-            "xxxxxxx",
-            "xxxxxxx",
-            "xxxxxxx",
-            "..xxx..",
-            "..xxx.."
-        ]
+        extras: [10, 14]
     }
 ];
