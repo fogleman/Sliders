@@ -16,9 +16,8 @@ var levels = [
             [17, 18],
             [18, 19],
         ],
-        moves: 30,
-        sources: [1],
-        targets: [12],
-        extras: [10, 14]
+        par: 30,
+        pieces: [1, 10, 14],
+        targets: [12]
     }
 ];
