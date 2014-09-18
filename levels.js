@@ -1,5 +1,22 @@
 var levels = [
     {
+        width: 7,
+        height: 7,
+        walls: [],
+        par: 0,
+        pieces: [10, 38, 24],
+        targets: [23, 25],
+        shape: [
+            "..xxx..",
+            "..xxx..",
+            "xxxxxxx",
+            "xxxxxxx",
+            "xxxxxxx",
+            "..xxx..",
+            "..xxx..",
+        ]
+    },
+    {
         width: 5,
         height: 5,
         walls: [

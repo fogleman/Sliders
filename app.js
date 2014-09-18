@@ -8,14 +8,17 @@ var COLORS = [
 ];
 
 var EXTRA = "#7a787d";
+var SELECTED = "#fabe0a";
 
 var WALL_SIZE = 0.1;
-var LINE_SIZE = 0.005;
+var LINE_SIZE = 0.01;
 
 var UP = {dx: 0, dy: -1};
 var DOWN = {dx: 0, dy: 1};
 var LEFT = {dx: -1, dy: 0};
 var RIGHT = {dx: 1, dy: 0};
+
+var DIRECTIONS = [UP, DOWN, LEFT, RIGHT];
 
 var ARROW_KEYS = {
     37: LEFT,
@@ -24,17 +27,20 @@ var ARROW_KEYS = {
     40: DOWN
 };
 
+
 // Level
 function Level(data) {
     _.extend(this, data);
     this.selection = 0;
     this.moves = 0;
+    this.walls = this.walls.concat(this.wallsFromShape());
     // width
     // height
     // walls
     // pieces
     // targets
     // par
+    // shape
 }
 
 Level.prototype.xy = function(index) {
@@ -60,12 +66,48 @@ Level.prototype.neighbor = function(index, direction) {
     return this.index(x, y);
 }
 
+Level.prototype.direction = function(a, b) {
+    a = this.xy(a);
+    b = this.xy(b);
+    var dx = b.x - a.x;
+    var dy = b.y - a.y;
+    return {dx: dx, dy: dy};
+}
+
 Level.prototype.distance = function(a, b) {
     a = this.xy(a);
     b = this.xy(b);
     var dx = Math.abs(a.x - b.x);
     var dy = Math.abs(a.y - b.y);
     return dx + dy;
+}
+
+Level.prototype.wallsFromShape = function() {
+    var walls = [];
+    for (var y = 0; y < this.height; y++) {
+        for (var x = 0; x < this.width; x++) {
+            var index = this.index(x, y);
+            if (this.checkShape(index)) {
+                continue;
+            }
+            for (var i = 0; i < 4; i++) {
+                var direction = DIRECTIONS[i];
+                var neighbor = this.neighbor(index, direction);
+                if (neighbor && this.checkShape(neighbor)) {
+                    walls.push([index, neighbor])
+                }
+            }
+        }
+    }
+    return walls;
+}
+
+Level.prototype.checkShape = function(index) {
+    if (this.shape === undefined) {
+        return true;
+    }
+    var point = this.xy(index);
+    return this.shape[point.y].charCodeAt(point.x) !== 46;
 }
 
 Level.prototype.hasWall = function(index, direction) {
@@ -159,19 +201,12 @@ LevelView.prototype.createCellLabels = function(parent) {
     }
 }
 
-LevelView.prototype.createWall = function(parent, wall) {
-    var a = this.level.xy(wall[0]);
-    var b = this.level.xy(wall[1]);
-    var x = (a.x + b.x) / 2 + 0.5;
-    var y = (a.y + b.y) / 2 + 0.5;
-    var dx = 0;
-    var dy = 0;
-    if (a.x === b.x) {
-        dx = 0.5; // horizontal
-    }
-    else {
-        dy = 0.5; // vertical
-    }
+LevelView.prototype.createWall = function(parent, index, direction) {
+    var point = this.level.xy(index);
+    var x = point.x + direction.dx * 0.5 + 0.5;
+    var y = point.y + direction.dy * 0.5 + 0.5;
+    var dx = Math.abs(direction.dy) * 0.5;
+    var dy = Math.abs(direction.dx) * 0.5;
     parent.append("line")
         .attr("x1", x - dx)
         .attr("y1", y - dy)
@@ -185,42 +220,57 @@ LevelView.prototype.createWall = function(parent, wall) {
 
 LevelView.prototype.createBoard = function(parent) {
     var level = this.level;
+    var background = parent.append("g");
+    for (var y = 0; y < level.height; y++) {
+        for (var x = 0; x < level.width; x++) {
+            if (!level.checkShape(level.index(x, y))) {
+                continue;
+            }
+            background.append("rect")
+                .attr("x", x)
+                .attr("y", y)
+                .attr("width", 1)
+                .attr("height", 1)
+                .attr("fill", "white")
+                ;
+        }
+    }
     var grid = parent.append("g");
-    for (var x = 1; x < level.width; x++) {
-        grid.append("line")
-            .attr("x1", x)
-            .attr("y1", 0)
-            .attr("x2", x)
-            .attr("y2", level.height)
-            .attr("stroke", "#7a787d")
-            .attr("stroke-width", LINE_SIZE)
-            ;
+    for (var y = 0; y < level.height; y++) {
+        for (var x = 0; x < level.width; x++) {
+            if (!level.checkShape(level.index(x, y))) {
+                continue;
+            }
+            grid.append("rect")
+                .attr("x", x)
+                .attr("y", y)
+                .attr("width", 1)
+                .attr("height", 1)
+                .attr("fill", "none")
+                .attr("stroke", "#7a787d")
+                .attr("stroke-width", LINE_SIZE)
+                .attr("opacity", 0.25)
+                ;
+        }
     }
-    for (var y = 1; y < level.height; y++) {
-        grid.append("line")
-            .attr("x1", 0)
-            .attr("y1", y)
-            .attr("x2", level.width)
-            .attr("y2", y)
-            .attr("stroke", "#7a787d")
-            .attr("stroke-width", LINE_SIZE)
-            ;
+    for (var y = 0; y < level.height; y++) {
+        for (var x = 0; x < level.width; x++) {
+            var index = level.index(x, y);
+            if (!level.checkShape(index)) {
+                continue;
+            }
+            for (var i = 0; i < 4; i++) {
+                var direction = DIRECTIONS[i];
+                if (level.neighbor(index, direction) === undefined) {
+                    this.createWall(parent, index, direction);
+                }
+            }
+        }
     }
-    var border = parent.append("g");
-    border.append("rect")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", level.width)
-        .attr("height", level.height)
-        .attr("rx", WALL_SIZE)
-        .attr("ry", WALL_SIZE)
-        .attr("fill", "none")
-        .attr("stroke", "black")
-        .attr("stroke-width", WALL_SIZE)
-        ;
     for (var i = 0; i < level.walls.length; i++) {
         var wall = level.walls[i];
-        this.createWall(parent, wall);
+        var direction = level.direction(wall[0], wall[1]);
+        this.createWall(parent, wall[0], direction);
     }
 }
 
@@ -230,11 +280,12 @@ LevelView.prototype.createSelection = function(parent, index) {
     selection.append("circle")
         .attr("cx", 0.5)
         .attr("cy", 0.5)
-        .attr("r", 0.41)
-        .attr("fill", "none")
-        .attr("stroke", "#7a787d")
-        .attr("stroke-width", 0.01)
-        .attr("stroke-dasharray", "0.05,0.05")
+        .attr("r", 0.42)
+        .attr("fill", SELECTED)
+        .attr("opacity", 0.5)
+        // .attr("stroke", "#7a787d")
+        // .attr("stroke-width", 0.01)
+        // .attr("stroke-dasharray", "0.05,0.05")
         ;
     selection
         .attr("transform", "translate(" + point.x + "," + point.y + ")")
@@ -286,9 +337,9 @@ LevelView.prototype.createTarget = function(parent, index, color) {
 
 LevelView.prototype.createLevel = function(parent) {
     var level = this.level;
-    var w = level.width + 1;
-    var h = level.height + 1;
-    parent.attr("viewBox", "-0.5 -0.5 " + w + " " + h);
+    var w = level.width + 2;
+    var h = level.height + 2;
+    parent.attr("viewBox", "-1 -1 " + w + " " + h);
     var group = parent.append("g");
     this.createBoard(group);
     // this.createCellLabels(group);
@@ -298,13 +349,13 @@ LevelView.prototype.createLevel = function(parent) {
         var target = this.createTarget(group, index, color);
         this.targets.push(target);
     }
+    this.selection = this.createSelection(group, level.pieces[0]);
     for (var i = 0; i < level.pieces.length; i++) {
         var index = level.pieces[i];
         var color = i < level.targets.length ? COLORS[i] : EXTRA;
         var piece = this.createPiece(group, index, color);
         this.pieces.push(piece);
     }
-    this.selection = this.createSelection(group, level.pieces[0]);
 }
 
 LevelView.prototype.setSelection = function(piece) {
@@ -338,7 +389,11 @@ LevelView.prototype.doMove = function(piece, a, b) {
 // Controller
 function Controller(parent) {
     var view = d3.select("#view");
-    this.level = new Level(levels[0]);
+    var number = 0;
+    if (window.location.hash) {
+        number = parseInt(window.location.hash.substring(1));
+    }
+    this.level = new Level(levels[number]);
     this.levelView = new LevelView(view, this.level);
     var body = d3.select("body");
     var self = this;
