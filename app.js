@@ -50,6 +50,12 @@ Level.prototype.xy = function(index) {
 }
 
 Level.prototype.index = function(x, y) {
+    if (x < 0 || x >= this.width) {
+        return undefined;
+    }
+    if (y < 0 || y >= this.height) {
+        return undefined;
+    }
     return y * this.width + x;
 }
 
@@ -166,6 +172,15 @@ Level.prototype.doMove = function(piece, direction) {
     }
     this.pieces[piece] = index;
     this.moves++;
+}
+
+Level.prototype.pieceAt = function(index) {
+    for (var i = 0; i < this.pieces.length; i++) {
+        if (this.pieces[i] === index) {
+            return i;
+        }
+    }
+    return undefined;
 }
 
 Level.prototype.nextSelection = function(previous) {
@@ -395,6 +410,7 @@ function Controller(parent) {
     }
     this.level = new Level(levels[number]);
     this.levelView = new LevelView(view, this.level);
+    this.drag = null;
     var body = d3.select("body");
     var self = this;
     body.on("keydown", function() {
@@ -409,6 +425,14 @@ function Controller(parent) {
             self.moveSelectedPiece(direction);
         }
     });
+    view.on("mousedown", function() {
+        var point = d3.mouse(this);
+        self.mouseDown(point[0], point[1]);
+    });
+    view.on("mouseup", function() {
+        var point = d3.mouse(this);
+        self.mouseUp(point[0], point[1]);
+    });
 }
 
 Controller.prototype.nextSelection = function(previous) {
@@ -416,8 +440,7 @@ Controller.prototype.nextSelection = function(previous) {
     this.levelView.setSelection(selection);
 }
 
-Controller.prototype.moveSelectedPiece = function(direction) {
-    var piece = this.level.selection;
+Controller.prototype.movePiece = function(piece, direction) {
     if (!this.level.canMove(piece, direction)) {
         return;
     }
@@ -425,6 +448,48 @@ Controller.prototype.moveSelectedPiece = function(direction) {
     var b = this.level.computeMove(piece, direction);
     this.level.doMove(piece, direction);
     this.levelView.doMove(piece, a, b);
+}
+
+Controller.prototype.moveSelectedPiece = function(direction) {
+    var piece = this.level.selection;
+    this.movePiece(piece, direction);
+}
+
+Controller.prototype.mouseDown = function(x, y) {
+    var index = this.level.index(Math.floor(x), Math.floor(y));
+    var piece = this.level.pieceAt(index);
+    if (piece !== undefined) {
+        this.drag = {x: x, y: y, piece: piece};
+        this.levelView.setSelection(piece);
+        this.level.selection = piece;
+    }
+    else {
+        this.drag = null;
+    }
+}
+
+Controller.prototype.mouseUp = function(x, y) {
+    if (!this.drag) {
+        return;
+    }
+    var dx = x - this.drag.x;
+    var dy = y - this.drag.y;
+    var piece = this.drag.piece;
+    this.drag = null;
+    var d = Math.sqrt(dx * dx + dy * dy);
+    if (d < 0.1) {
+        return;
+    }
+    if (Math.abs(dx) > Math.abs(dy)) {
+        dx = dx < 0 ? -1 : 1;
+        dy = 0;
+    }
+    else {
+        dy = dy < 0 ? -1 : 1;
+        dx = 0;
+    }
+    direction = {dx: dx, dy: dy};
+    this.movePiece(piece, direction);
 }
 
 // main
