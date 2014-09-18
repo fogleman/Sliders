@@ -397,18 +397,14 @@ LevelView.prototype.doMove = function(piece, a, b) {
 // Controller
 function Controller(parent) {
     var view = d3.select("#view");
-    var number = 0;
-    if (window.location.hash) {
-        number = parseInt(window.location.hash.substring(1));
-    }
-    this.level = new Level(levels[number]);
-    this.levelView = new LevelView(view, this.level);
-    this.drag = null;
     var body = d3.select("body");
     var self = this;
+    d3.select(window).on("hashchange", function() {
+        self.hashChange();
+    });
     body.on("keydown", function() {
         var code = d3.event.keyCode;
-        if (code === 9) {
+        if (code === 9) { // tab
             d3.event.preventDefault();
             self.nextSelection(d3.event.shiftKey);
         }
@@ -426,6 +422,21 @@ function Controller(parent) {
         var point = d3.mouse(this);
         self.mouseUp(point[0], point[1]);
     });
+    this.hashChange();
+}
+
+Controller.prototype.loadLevel = function(number) {
+    var view = d3.select("#view");
+    view.select("g").remove();
+    this.level = new Level(levels[number]);
+    this.levelView = new LevelView(view, this.level);
+    this.drag = null;
+}
+
+Controller.prototype.hashChange = function() {
+    number = parseInt(window.location.hash.substring(1));
+    number = isNaN(number) ? 0 : number;
+    this.loadLevel(number);
 }
 
 Controller.prototype.nextSelection = function(previous) {
