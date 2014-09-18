@@ -29,8 +29,9 @@ var ARROW_KEYS = {
 
 
 // Level
-function Level(data) {
-    _.extend(this, data);
+function Level(number) {
+    _.extend(this, levels[number]);
+    this.number = number;
     this.selection = 0;
     this.moves = 0;
     this.walls = this.walls.concat(this.wallsFromShape());
@@ -413,6 +414,12 @@ function Controller(parent) {
             var direction = ARROW_KEYS[code];
             self.moveSelectedPiece(direction);
         }
+        if (code === 189) { // minus
+            self.nextLevel(true);
+        }
+        if (code === 187) { // plus
+            self.nextLevel(false);
+        }
     });
     view.on("mousedown", function() {
         var point = d3.mouse(this);
@@ -428,9 +435,16 @@ function Controller(parent) {
 Controller.prototype.loadLevel = function(number) {
     var view = d3.select("#view");
     view.select("g").remove();
-    this.level = new Level(levels[number]);
+    this.level = new Level(number);
     this.levelView = new LevelView(view, this.level);
     this.drag = null;
+    window.location.hash = "" + number;
+}
+
+Controller.prototype.nextLevel = function(previous) {
+    var n = previous ? levels.length - 1 : 1;
+    var number = (this.level.number + n) % levels.length;
+    this.loadLevel(number);
 }
 
 Controller.prototype.hashChange = function() {
