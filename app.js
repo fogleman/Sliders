@@ -34,13 +34,6 @@ function Level(data) {
     this.selection = 0;
     this.moves = 0;
     this.walls = this.walls.concat(this.wallsFromShape());
-    // width
-    // height
-    // walls
-    // pieces
-    // targets
-    // par
-    // shape
 }
 
 Level.prototype.xy = function(index) {
