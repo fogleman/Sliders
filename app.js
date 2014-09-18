@@ -34,6 +34,7 @@ function Level(number) {
     this.number = number;
     this.selection = 0;
     this.moves = 0;
+    this.stack = [];
     this.walls = this.walls.concat(this.wallsFromShape());
 }
 
@@ -164,8 +165,22 @@ Level.prototype.doMove = function(piece, direction) {
     if (index === undefined) {
         return;
     }
+    this.stack.push([piece, this.pieces[piece]]);
     this.pieces[piece] = index;
     this.moves++;
+}
+
+Level.prototype.undoMove = function() {
+    if (this.stack.length == 0) {
+        return undefined;
+    }
+    var move = this.stack.pop();
+    var piece = move[0];
+    var index = move[1];
+    var before = this.pieces[piece];
+    this.pieces[piece] = index;
+    this.moves--;
+    return [piece, before, index];
 }
 
 Level.prototype.pieceAt = function(index) {
@@ -397,6 +412,11 @@ LevelView.prototype.doMove = function(piece, a, b) {
 
 // Controller
 function Controller(parent) {
+    this.bindEvents();
+    this.hashChange();
+}
+
+Controller.prototype.bindEvents = function() {
     var view = d3.select("#view");
     var body = d3.select("body");
     var self = this;
@@ -409,15 +429,21 @@ function Controller(parent) {
             d3.event.preventDefault();
             self.nextSelection(d3.event.shiftKey);
         }
+        if (code == 85) { // u
+            d3.event.preventDefault();
+            self.undoMove();
+        }
         if (ARROW_KEYS.hasOwnProperty(code)) {
             d3.event.preventDefault();
             var direction = ARROW_KEYS[code];
             self.moveSelectedPiece(direction);
         }
         if (code === 189) { // minus
+            d3.event.preventDefault();
             self.nextLevel(true);
         }
         if (code === 187) { // plus
+            d3.event.preventDefault();
             self.nextLevel(false);
         }
     });
@@ -429,7 +455,20 @@ function Controller(parent) {
         var point = d3.mouse(this);
         self.mouseUp(point[0], point[1]);
     });
-    this.hashChange();
+    view.on("touchstart", function() {
+        var point = d3.touch(this);
+        self.mouseDown(point[0], point[1]);
+    });
+    view.on("touchend", function() {
+        var point = d3.touch(this);
+        self.mouseUp(point[0], point[1]);
+    });
+}
+
+Controller.prototype.setLabels = function() {
+    d3.select("#label-level").text(this.level.number);
+    d3.select("#label-par").text(this.level.par);
+    d3.select("#label-moves").text(this.level.moves);
 }
 
 Controller.prototype.loadLevel = function(number) {
@@ -439,6 +478,7 @@ Controller.prototype.loadLevel = function(number) {
     this.levelView = new LevelView(view, this.level);
     this.drag = null;
     window.location.hash = "" + number;
+    this.setLabels();
 }
 
 Controller.prototype.nextLevel = function(previous) {
@@ -458,6 +498,14 @@ Controller.prototype.nextSelection = function(previous) {
     this.levelView.setSelection(selection);
 }
 
+Controller.prototype.undoMove = function() {
+    var move = this.level.undoMove();
+    if (move !== undefined) {
+        this.levelView.doMove(move[0], move[1], move[2]);
+    }
+    this.setLabels();
+}
+
 Controller.prototype.movePiece = function(piece, direction) {
     if (!this.level.canMove(piece, direction)) {
         return;
@@ -466,6 +514,7 @@ Controller.prototype.movePiece = function(piece, direction) {
     var b = this.level.computeMove(piece, direction);
     this.level.doMove(piece, direction);
     this.levelView.doMove(piece, a, b);
+    this.setLabels();
 }
 
 Controller.prototype.moveSelectedPiece = function(direction) {

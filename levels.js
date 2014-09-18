@@ -33,7 +33,7 @@ var levels = [
             [17, 18],
             [18, 19],
         ],
-        par: 0,
+        par: 20,
         pieces: [1, 10, 14],
         targets: [12]
     },
