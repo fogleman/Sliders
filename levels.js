@@ -1,5 +1,37 @@
 var levels = [
     {
+        width: 5,
+        height: 5,
+        walls: [
+            [10, 15],
+            [18, 19],
+            [4, 9]
+        ],
+        par: 10,
+        pieces: [11, 13],
+        targets: [16, 18],
+        shape: [
+            "xxxxx",
+            "xx.xx",
+            "xx.xx",
+            "xx.xx",
+            "xxxxx",
+        ]
+    },
+    {
+        width: 4,
+        height: 4,
+        walls: [
+            [4, 5],
+            [6, 7],
+            [8, 9],
+            [10, 11]
+        ],
+        par: 12,
+        pieces: [1, 13],
+        targets: [6, 14]
+    },
+    {
         width: 7,
         height: 7,
         walls: [],
@@ -36,38 +68,6 @@ var levels = [
         par: 20,
         pieces: [1, 10, 14],
         targets: [12]
-    },
-    {
-        width: 4,
-        height: 4,
-        walls: [
-            [4, 5],
-            [6, 7],
-            [8, 9],
-            [10, 11]
-        ],
-        par: 12,
-        pieces: [1, 13],
-        targets: [6, 14]
-    },
-    {
-        width: 5,
-        height: 5,
-        walls: [
-            [10, 15],
-            [18, 19],
-            [4, 9]
-        ],
-        par: 10,
-        pieces: [11, 13],
-        targets: [16, 18],
-        shape: [
-            "xxxxx",
-            "xx.xx",
-            "xx.xx",
-            "xx.xx",
-            "xxxxx",
-        ]
     },
     {
         width: 7,
