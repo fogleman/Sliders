@@ -185,6 +185,15 @@ Level.prototype.undoMove = function() {
     return move;
 }
 
+Level.prototype.gameOver = function() {
+    for (var i = 0; i < this.targets.length; i++) {
+        if (this.pieces[i] !== this.targets[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 Level.prototype.pieceAt = function(index) {
     for (var i = 0; i < this.pieces.length; i++) {
         if (this.pieces[i] === index) {
@@ -208,6 +217,7 @@ function LevelView(parent, level) {
     this.targets = [];
     this.selection = null;
     this.root = null;
+    this.board = null;
     this.createLevel(parent);
 }
 
@@ -368,23 +378,25 @@ LevelView.prototype.createLevel = function(parent) {
         .delay(LEVEL_TRANSITION / 2)
         .duration(0)
         .attr("viewBox", "-1 -1 " + w + " " + h);
-    var group = parent.append("g");
-    this.createBoard(group);
-    // this.createCellLabels(group);
+    var root = parent.append("g");
+    var board = root.append("g");
+    this.createBoard(board);
+    // this.createCellLabels(board);
     for (var i = 0; i < level.targets.length; i++) {
         var index = level.targets[i];
         var color = COLORS[i];
-        var target = this.createTarget(group, index, color);
+        var target = this.createTarget(board, index, color);
         this.targets.push(target);
     }
-    this.selection = this.createSelection(group, level.pieces[0]);
+    this.selection = this.createSelection(board, level.pieces[0]);
     for (var i = 0; i < level.pieces.length; i++) {
         var index = level.pieces[i];
         var color = i < level.targets.length ? COLORS[i] : EXTRA;
-        var piece = this.createPiece(group, index, color);
+        var piece = this.createPiece(board, index, color);
         this.pieces.push(piece);
     }
-    this.root = group;
+    this.root = root;
+    this.board = board;
 }
 
 LevelView.prototype.slideIn = function(reverse) {
@@ -433,6 +445,47 @@ LevelView.prototype.doMove = function(piece, a, b) {
             .attr("transform", "translate(" + point.x + "," + point.y + ")")
             ;
     }
+}
+
+LevelView.prototype.doWin = function() {
+    this.board
+        .transition()
+        .delay(500)
+        .duration(0)
+        .attr("opacity", 0.4)
+        ;
+    this.root.append("text")
+        .attr("x", this.level.width / 2)
+        .attr("y", this.level.height / 2)
+        .attr("fill", "none")
+        .attr("stroke", "black")
+        .attr("stroke-width", 0)
+        .attr("stroke-linejoin", "round")
+        .attr("text-anchor", "middle")
+        .attr("font-size", 0)
+        .text("Win!")
+        .transition()
+        .delay(500)
+        .duration(500)
+        .ease("bounce")
+        .attr("font-size", 3)
+        .attr("stroke-width", 0.1)
+        .attr("y", this.level.height / 2 + 1)
+        ;
+    this.root.append("text")
+        .attr("x", this.level.width / 2)
+        .attr("y", this.level.height / 2)
+        .attr("fill", COLORS[3])
+        .attr("text-anchor", "middle")
+        .attr("font-size", 0)
+        .text("Win!")
+        .transition()
+        .delay(500)
+        .duration(500)
+        .ease("bounce")
+        .attr("font-size", 3)
+        .attr("y", this.level.height / 2 + 1)
+        ;
 }
 
 
@@ -550,11 +603,22 @@ Controller.prototype.movePiece = function(piece, direction) {
     this.level.doMove(piece, direction);
     this.levelView.doMove(piece, a, b);
     this.setLabels();
+    if (this.level.gameOver()) {
+        this.gameOver();
+    }
 }
 
 Controller.prototype.moveSelectedPiece = function(direction) {
     var piece = this.level.selection;
     this.movePiece(piece, direction);
+}
+
+Controller.prototype.gameOver = function() {
+    this.levelView.doWin();
+    var self = this;
+    setTimeout(function() {
+        self.nextLevel();
+    }, 2000);
 }
 
 Controller.prototype.mouseDown = function(x, y) {
