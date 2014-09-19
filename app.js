@@ -491,6 +491,9 @@ LevelView.prototype.doWin = function() {
 
 // Controller
 function Controller(parent) {
+    var view = d3.select("#view");
+    view.attr("preserveAspectRatio", "xMidYMid meet");
+    view.attr("viewBox", "-1 -1 9 9");
     this.bindEvents();
     this.hashChange();
 }
@@ -572,12 +575,12 @@ Controller.prototype.nextLevel = function(previous) {
     var number = this.level.number + n;
     number = Math.max(0, number);
     number = Math.min(levels.length - 1, number);
-    window.location.hash = "" + number;
+    window.location.hash = "" + (number + 1);
 }
 
 Controller.prototype.hashChange = function() {
     number = parseInt(window.location.hash.substring(1));
-    number = isNaN(number) ? 0 : number;
+    number = isNaN(number) ? 0 : number - 1;
     this.loadLevel(number);
 }
 
