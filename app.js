@@ -12,6 +12,7 @@ var SELECTED = "#fabe0a";
 
 var WALL_SIZE = 0.1;
 var LINE_SIZE = 0.01;
+var LEVEL_TRANSITION = 600;
 
 var UP = {dx: 0, dy: -1};
 var DOWN = {dx: 0, dy: 1};
@@ -165,7 +166,11 @@ Level.prototype.doMove = function(piece, direction) {
     if (index === undefined) {
         return;
     }
-    this.stack.push([piece, this.pieces[piece]]);
+    this.stack.push({
+        piece: piece,
+        src: this.pieces[piece],
+        dst: index
+    });
     this.pieces[piece] = index;
     this.moves++;
 }
@@ -175,12 +180,9 @@ Level.prototype.undoMove = function() {
         return undefined;
     }
     var move = this.stack.pop();
-    var piece = move[0];
-    var index = move[1];
-    var before = this.pieces[piece];
-    this.pieces[piece] = index;
+    this.pieces[move.piece] = move.src;
     this.moves--;
-    return [piece, before, index];
+    return move;
 }
 
 Level.prototype.pieceAt = function(index) {
@@ -205,6 +207,7 @@ function LevelView(parent, level) {
     this.pieces = [];
     this.targets = [];
     this.selection = null;
+    this.root = null;
     this.createLevel(parent);
 }
 
@@ -307,9 +310,6 @@ LevelView.prototype.createSelection = function(parent, index) {
         .attr("r", 0.42)
         .attr("fill", SELECTED)
         .attr("opacity", 0.5)
-        // .attr("stroke", "#7a787d")
-        // .attr("stroke-width", 0.01)
-        // .attr("stroke-dasharray", "0.05,0.05")
         ;
     selection
         .attr("transform", "translate(" + point.x + "," + point.y + ")")
@@ -363,7 +363,11 @@ LevelView.prototype.createLevel = function(parent) {
     var level = this.level;
     var w = level.width + 2;
     var h = level.height + 2;
-    parent.attr("viewBox", "-1 -1 " + w + " " + h);
+    parent
+        .transition()
+        .delay(LEVEL_TRANSITION / 2)
+        .duration(0)
+        .attr("viewBox", "-1 -1 " + w + " " + h);
     var group = parent.append("g");
     this.createBoard(group);
     // this.createCellLabels(group);
@@ -380,6 +384,30 @@ LevelView.prototype.createLevel = function(parent) {
         var piece = this.createPiece(group, index, color);
         this.pieces.push(piece);
     }
+    this.root = group;
+}
+
+LevelView.prototype.slideIn = function(reverse) {
+    var x = reverse ? -20 : 20;
+    this.root
+        .attr("transform", "translate(" + x + ", 0)");
+    this.root
+        .transition()
+        .duration(LEVEL_TRANSITION)
+        .attr("transform", "translate(0, 0)");
+        ;
+}
+
+LevelView.prototype.slideOut = function(reverse) {
+    var x = reverse ? 20 : -20;
+    this.root
+        .attr("transform", "translate(0, 0)");
+    this.root
+        .transition()
+        .duration(LEVEL_TRANSITION)
+        .attr("transform", "translate(" + x + ", 0)")
+        .remove()
+        ;
 }
 
 LevelView.prototype.setSelection = function(piece) {
@@ -390,21 +418,19 @@ LevelView.prototype.setSelection = function(piece) {
 }
 
 LevelView.prototype.doMove = function(piece, a, b) {
-    n = this.level.distance(a, b);
-    a = this.level.xy(a);
-    b = this.level.xy(b);
-    var views = [this.pieces[piece], this.selection];
+    var n = this.level.distance(a, b);
+    var point = this.level.xy(b);
+    var views = [this.pieces[piece]];
+    if (piece === this.level.selection) {
+        views.push(this.selection);
+    }
     for (var i = 0; i < views.length; i++) {
         var view = views[i];
         view
             .transition()
             .ease("quad-in-out")
             .duration(100 + 100 * n)
-            .attrTween("transform", function() {
-                var t1 = "translate(" + a.x + "," + a.y + ")";
-                var t2 = "translate(" + b.x + "," + b.y + ")";
-                return d3.interpolate(t1, t2);
-            })
+            .attr("transform", "translate(" + point.x + "," + point.y + ")")
             ;
     }
 }
@@ -466,25 +492,34 @@ Controller.prototype.bindEvents = function() {
 }
 
 Controller.prototype.setLabels = function() {
-    d3.select("#label-level").text(this.level.number);
+    d3.select("#label-level").text(this.level.number + 1);
     d3.select("#label-par").text(this.level.par);
     d3.select("#label-moves").text(this.level.moves);
 }
 
 Controller.prototype.loadLevel = function(number) {
+    var old = this.levelView;
+    var reverse = false;
+    if (old) {
+        if (old.level.number > number) {
+            reverse = true;
+        }
+        old.slideOut(reverse);
+    }
     var view = d3.select("#view");
-    view.select("g").remove();
     this.level = new Level(number);
     this.levelView = new LevelView(view, this.level);
+    this.levelView.slideIn(reverse);
     this.drag = null;
-    window.location.hash = "" + number;
     this.setLabels();
 }
 
 Controller.prototype.nextLevel = function(previous) {
-    var n = previous ? levels.length - 1 : 1;
-    var number = (this.level.number + n) % levels.length;
-    this.loadLevel(number);
+    var n = previous ? -1 : 1;
+    var number = this.level.number + n;
+    number = Math.max(0, number);
+    number = Math.min(levels.length - 1, number);
+    window.location.hash = "" + number;
 }
 
 Controller.prototype.hashChange = function() {
@@ -501,7 +536,7 @@ Controller.prototype.nextSelection = function(previous) {
 Controller.prototype.undoMove = function() {
     var move = this.level.undoMove();
     if (move !== undefined) {
-        this.levelView.doMove(move[0], move[1], move[2]);
+        this.levelView.doMove(move.piece, move.dst, move.src);
     }
     this.setLabels();
 }
