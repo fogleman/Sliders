@@ -3,7 +3,7 @@ var levels = [
         width: 7,
         height: 7,
         walls: [],
-        par: 0,
+        par: 13,
         pieces: [10, 38, 24],
         targets: [23, 25],
         shape: [
@@ -46,7 +46,7 @@ var levels = [
             [8, 9],
             [10, 11]
         ],
-        par: 0,
+        par: 12,
         pieces: [1, 13],
         targets: [6, 14]
     },
@@ -58,7 +58,7 @@ var levels = [
             [18, 19],
             [4, 9]
         ],
-        par: 0,
+        par: 10,
         pieces: [11, 13],
         targets: [16, 18],
         shape: [
@@ -73,7 +73,7 @@ var levels = [
         width: 7,
         height: 7,
         walls: [],
-        par: 0,
+        par: 20,
         pieces: [16, 32, 13, 35],
         targets: [21, 27],
         shape: [
