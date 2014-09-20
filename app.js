@@ -41,6 +41,7 @@ function Level(number) {
     this.targets = data.targets.slice();
     this.hands = data.hands ? data.hands.slice() : [];
     this.shape = data.shape ? data.shape.slice() : undefined;
+    this.info = data.info ? data.info : "";
     // other members
     this.number = number;
     this.selection = 0;
@@ -409,15 +410,29 @@ LevelView.prototype.createHand = function(parent, index) {
     return hand;
 }
 
+LevelView.prototype.createInfo = function(parent) {
+    var info = parent.append("g");
+    info.append("text")
+        .attr("x", this.level.width / 2)
+        .attr("y", this.level.height + 0.5)
+        .attr("font-size", 0.25)
+        .attr("fill", "#333")
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "central")
+        .text(this.level.info)
+        ;
+    return info;
+}
+
 LevelView.prototype.createLevel = function(parent) {
     var level = this.level;
-    var w = level.width + 2;
+    var w = level.width + 1;
     var h = level.height + 2;
     parent
         .transition()
         .delay(LEVEL_TRANSITION / 2)
         .duration(0)
-        .attr("viewBox", "-1 -1 " + w + " " + h);
+        .attr("viewBox", "-0.5 -1 " + w + " " + h);
     var root = parent.append("g");
     var board = root.append("g");
     this.createBoard(board);
@@ -443,6 +458,7 @@ LevelView.prototype.createLevel = function(parent) {
         piece.datum(i);
         this.pieces.push(piece);
     }
+    this.createInfo(board);
     this.root = root;
     this.board = board;
 }

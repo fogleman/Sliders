@@ -17,7 +17,8 @@ var LEVELS = [
             "xxxxx",
             "xxxxx",
             ".xxx.",
-        ]
+        ],
+        info: "Slide the red piece to the red target."
     },
     {
         width: 5,
