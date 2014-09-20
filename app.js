@@ -13,7 +13,6 @@ var SELECTED = "#fabe0a";
 var WALL_SIZE = 0.1;
 var LINE_SIZE = 0.01;
 var LEVEL_TRANSITION = 600;
-var SHOW_LABELS = false;
 
 var UP = {dx: 0, dy: -1};
 var DOWN = {dx: 0, dy: 1};
@@ -707,6 +706,7 @@ Controller.prototype.mouseUp = function(x, y) {
 
 // main
 function main() {
+    // localStorage.clear();
     new Controller();
 }
 

@@ -1,3 +1,5 @@
+var SHOW_LABELS = false;
+
 var LEVELS = [
     {
         width: 5,
@@ -5,9 +7,16 @@ var LEVELS = [
         walls: [
             [12, 17]
         ],
-        goal: 7,
-        pieces: [0, 24],
-        targets: [12]
+        goal: 8,
+        pieces: [15, 19],
+        targets: [12],
+        shape: [
+            ".xxx.",
+            "xxxxx",
+            "xxxxx",
+            "xxxxx",
+            ".xxx.",
+        ]
     },
     {
         width: 5,
