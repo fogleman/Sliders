@@ -3,11 +3,21 @@ var LEVELS = [
         width: 5,
         height: 5,
         walls: [
+            [12, 17]
+        ],
+        goal: 7,
+        pieces: [0, 24],
+        targets: [12]
+    },
+    {
+        width: 5,
+        height: 5,
+        walls: [
             [10, 15],
             [18, 19],
             [4, 9]
         ],
-        par: 10,
+        goal: 10,
         pieces: [11, 13],
         targets: [16, 18],
         shape: [
@@ -27,7 +37,7 @@ var LEVELS = [
             [8, 9],
             [10, 11]
         ],
-        par: 12,
+        goal: 12,
         pieces: [1, 13],
         targets: [6, 14]
     },
@@ -35,7 +45,7 @@ var LEVELS = [
         width: 7,
         height: 7,
         walls: [],
-        par: 13,
+        goal: 13,
         pieces: [10, 38, 24],
         targets: [23, 25],
         shape: [
@@ -65,7 +75,7 @@ var LEVELS = [
             [17, 18],
             [18, 19],
         ],
-        par: 20,
+        goal: 20,
         pieces: [1, 10, 14],
         targets: [12]
     },
@@ -73,7 +83,7 @@ var LEVELS = [
         width: 7,
         height: 7,
         walls: [],
-        par: 20,
+        goal: 20,
         pieces: [16, 32, 13, 35],
         targets: [21, 27],
         shape: [

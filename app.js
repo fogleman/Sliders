@@ -13,6 +13,7 @@ var SELECTED = "#fabe0a";
 var WALL_SIZE = 0.1;
 var LINE_SIZE = 0.01;
 var LEVEL_TRANSITION = 600;
+var SHOW_LABELS = false;
 
 var UP = {dx: 0, dy: -1};
 var DOWN = {dx: 0, dy: 1};
@@ -31,12 +32,22 @@ var ARROW_KEYS = {
 
 // Level
 function Level(number) {
-    _.extend(this, LEVELS[number - 1]);
+    // level data
+    var data = LEVELS[number - 1];
+    this.width = data.width;
+    this.height = data.height;
+    this.goal = data.goal;
+    this.walls = data.walls.slice();
+    this.pieces = data.pieces.slice();
+    this.targets = data.targets.slice();
+    this.shape = data.shape && data.shape.slice();
+    // other members
     this.number = number;
     this.selection = 0;
     this.moves = 0;
     this.stack = [];
     this.walls = this.walls.concat(this.wallsFromShape());
+    console.log(this);
 }
 
 Level.prototype.xy = function(index) {
@@ -381,7 +392,9 @@ LevelView.prototype.createLevel = function(parent) {
     var root = parent.append("g");
     var board = root.append("g");
     this.createBoard(board);
-    // this.createCellLabels(board);
+    if (SHOW_LABELS) {
+        this.createCellLabels(board);
+    }
     for (var i = 0; i < level.targets.length; i++) {
         var index = level.targets[i];
         var color = COLORS[i];
@@ -553,7 +566,7 @@ Controller.prototype.setLabels = function() {
         best = "-";
     }
     else {
-        var delta = best - this.level.par;
+        var delta = best - this.level.goal;
         if (delta === 0) {
             best = '<span class="glyphicon glyphicon-star"></span>';
         }
@@ -562,7 +575,7 @@ Controller.prototype.setLabels = function() {
         }
     }
     d3.select("#label-level").text(this.level.number);
-    d3.select("#label-par").text(this.level.par);
+    d3.select("#label-goal").text(this.level.goal);
     d3.select("#label-best").html(best);
     d3.select("#label-moves").text(this.level.moves);
 }
