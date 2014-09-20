@@ -7,9 +7,10 @@ var LEVELS = [
         walls: [
             [12, 17]
         ],
-        goal: 8,
+        goal: 5,
         pieces: [15, 19],
         targets: [12],
+        hands: [8],
         shape: [
             ".xxx.",
             "xxxxx",
