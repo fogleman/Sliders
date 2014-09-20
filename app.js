@@ -221,8 +221,9 @@ Level.prototype.nextSelection = function(previous) {
 
 
 // LevelView
-function LevelView(parent, level) {
+function LevelView(parent, level, drag) {
     this.level = level;
+    this.drag = drag;
     this.pieces = [];
     this.targets = [];
     this.selection = null;
@@ -357,6 +358,7 @@ LevelView.prototype.createPiece = function(parent, index, color) {
     piece
         .attr("transform", "translate(" + point.x + "," + point.y + ")")
         ;
+    piece.call(this.drag);
     return piece;
 }
 
@@ -405,6 +407,7 @@ LevelView.prototype.createLevel = function(parent) {
         var index = level.pieces[i];
         var color = i < level.targets.length ? COLORS[i] : EXTRA;
         var piece = this.createPiece(board, index, color);
+        piece.datum(i);
         this.pieces.push(piece);
     }
     this.root = root;
@@ -507,7 +510,7 @@ function Controller(parent) {
     view.attr("preserveAspectRatio", "xMidYMid meet");
     view.attr("viewBox", "-1 -1 9 9");
     this.bindEvents();
-    this.hashChange();
+    this.onHashChange();
 }
 
 Controller.prototype.bindEvents = function() {
@@ -515,7 +518,7 @@ Controller.prototype.bindEvents = function() {
     var body = d3.select("body");
     var self = this;
     d3.select(window).on("hashchange", function() {
-        self.hashChange();
+        self.onHashChange();
     });
     body.on("keydown", function() {
         var code = d3.event.keyCode;
@@ -541,22 +544,50 @@ Controller.prototype.bindEvents = function() {
             self.nextLevel(false);
         }
     });
-    view.on("mousedown", function() {
-        var point = d3.mouse(this);
-        self.mouseDown(point[0], point[1]);
-    });
-    view.on("mouseup", function() {
-        var point = d3.mouse(this);
-        self.mouseUp(point[0], point[1]);
-    });
-    view.on("touchstart", function() {
-        var point = d3.touch(this);
-        self.mouseDown(point[0], point[1]);
-    });
-    view.on("touchend", function() {
-        var point = d3.touch(this);
-        self.mouseUp(point[0], point[1]);
-    });
+    this.dragData = {};
+    this.drag = d3.behavior.drag()
+        .on("dragstart", function() {
+            d3.event.sourceEvent.stopPropagation();
+            var i = d3.select(this).datum();
+            self.dragData[i] = {
+                start: null,
+                end: null
+            };
+            self.levelView.setSelection(i);
+            self.level.selection = i;
+        })
+        .on("drag", function() {
+            var i = d3.select(this).datum();
+            var point = {x: d3.event.x, y: d3.event.y};
+            self.dragData[i].start = self.dragData[i].start || point;
+            self.dragData[i].end = point;
+        })
+        .on("dragend", function() {
+            var i = d3.select(this).datum();
+            var start = self.dragData[i].start;
+            var end = self.dragData[i].end;
+            delete self.dragData[i];
+            if (start === null || end === null) {
+                return;
+            }
+            var dx = end.x - start.x;
+            var dy = end.y - start.y;
+            var d = Math.sqrt(dx * dx + dy * dy);
+            if (d < 0.1) {
+                return;
+            }
+            if (Math.abs(dx) > Math.abs(dy)) {
+                dx = dx < 0 ? -1 : 1;
+                dy = 0;
+            }
+            else {
+                dy = dy < 0 ? -1 : 1;
+                dx = 0;
+            }
+            direction = {dx: dx, dy: dy};
+            self.movePiece(i, direction);
+        })
+        ;
 }
 
 Controller.prototype.setLabels = function() {
@@ -590,9 +621,8 @@ Controller.prototype.loadLevel = function(number) {
     }
     var view = d3.select("#view");
     this.level = new Level(number);
-    this.levelView = new LevelView(view, this.level);
+    this.levelView = new LevelView(view, this.level, this.drag);
     this.levelView.slideIn(reverse);
-    this.drag = null;
     this.setLabels();
 }
 
@@ -604,7 +634,7 @@ Controller.prototype.nextLevel = function(previous) {
     window.location.hash = "" + number;
 }
 
-Controller.prototype.hashChange = function() {
+Controller.prototype.onHashChange = function() {
     number = parseInt(window.location.hash.substring(1));
     number = isNaN(number) ? 1 : number;
     this.loadLevel(number);
@@ -632,7 +662,7 @@ Controller.prototype.movePiece = function(piece, direction) {
     this.level.doMove(piece, direction);
     this.levelView.doMove(piece, a, b);
     if (this.level.complete()) {
-        this.complete();
+        this.onComplete();
     }
     this.setLabels();
 }
@@ -658,50 +688,13 @@ Controller.prototype.setBest = function(number, moves) {
     localStorage[key] = moves;
 }
 
-Controller.prototype.complete = function() {
+Controller.prototype.onComplete = function() {
     this.setBest(this.level.number, this.level.moves);
     this.levelView.doWin();
     var self = this;
     setTimeout(function() {
         self.nextLevel();
     }, 2000);
-}
-
-Controller.prototype.mouseDown = function(x, y) {
-    var index = this.level.index(Math.floor(x), Math.floor(y));
-    var piece = this.level.pieceAt(index);
-    if (piece !== undefined) {
-        this.drag = {x: x, y: y, piece: piece};
-        this.levelView.setSelection(piece);
-        this.level.selection = piece;
-    }
-    else {
-        this.drag = null;
-    }
-}
-
-Controller.prototype.mouseUp = function(x, y) {
-    if (!this.drag) {
-        return;
-    }
-    var dx = x - this.drag.x;
-    var dy = y - this.drag.y;
-    var piece = this.drag.piece;
-    this.drag = null;
-    var d = Math.sqrt(dx * dx + dy * dy);
-    if (d < 0.1) {
-        return;
-    }
-    if (Math.abs(dx) > Math.abs(dy)) {
-        dx = dx < 0 ? -1 : 1;
-        dy = 0;
-    }
-    else {
-        dy = dy < 0 ? -1 : 1;
-        dx = 0;
-    }
-    direction = {dx: dx, dy: dy};
-    this.movePiece(piece, direction);
 }
 
 // main
