@@ -36,10 +36,11 @@ function Level(number) {
     this.width = data.width;
     this.height = data.height;
     this.goal = data.goal;
-    this.walls = data.walls.slice();
+    this.walls = data.walls ? data.walls.slice() : [];
     this.pieces = data.pieces.slice();
     this.targets = data.targets.slice();
-    this.shape = data.shape && data.shape.slice();
+    this.hands = data.hands ? data.hands.slice() : [];
+    this.shape = data.shape ? data.shape.slice() : undefined;
     // other members
     this.number = number;
     this.selection = 0;
@@ -152,6 +153,15 @@ Level.prototype.hasPiece = function(index, direction) {
     return false;
 }
 
+Level.prototype.hasHand = function(index) {
+    for (var i = 0; i < this.hands.length; i++) {
+        if (this.hands[i] === index) {
+            return true;
+        }
+    }
+    return false;
+}
+
 Level.prototype.computeMove = function(piece, direction) {
     var index = this.pieces[piece];
     var start = index;
@@ -163,6 +173,9 @@ Level.prototype.computeMove = function(piece, direction) {
             break;
         }
         index = this.neighbor(index, direction);
+        if (this.hasHand(index)) {
+            break;
+        }
     }
     return index !== start ? index : undefined;
 }
@@ -226,6 +239,7 @@ function LevelView(parent, level, drag) {
     this.drag = drag;
     this.pieces = [];
     this.targets = [];
+    this.hands = [];
     this.selection = null;
     this.root = null;
     this.board = null;
@@ -381,6 +395,20 @@ LevelView.prototype.createTarget = function(parent, index, color) {
     return target;
 }
 
+LevelView.prototype.createHand = function(parent, index) {
+    var point = this.level.xy(index);
+    var hand = parent.append("g");
+    hand.append("path")
+        .attr("fill", "#333")
+        .attr("d", "m 538.85352,405.667 c -16.677,-3.849 -32.306,-34.462 -58.104,-61.966 l 0,58.093 0,28.774 0,158.262 c 0,13.448 -10.901,24.35 -24.349,24.35 l -2.663,0 c -13.448,0 -24.35,-10.902 -24.35,-24.35 l 0,-158.262 -10.436,0 0,209.292 c 0,13.448 -10.902,24.349 -24.35,24.349 l -2.665,0 c -13.448,0 -24.349,-10.901 -24.349,-24.349 l 0,-209.292 -8.124,0 0,177.69 c 0,13.448 -10.902,24.349 -24.35,24.349 l -2.664,0 c -13.449,0 -24.35,-10.901 -24.35,-24.349 l 0,-177.69 -6.641,0 0,130.04 c 0,13.449 -10.901,24.35 -24.349,24.35 l -2.665,0 c -13.447,0 -24.349,-10.901 -24.349,-24.35 l 0,-130.04 -0.099,0 0,-172.65 c 0,0 0,-102.927 115.378,-102.927 71.961,0 102.437,33.608 111.897,56.55 0.084,0.147 71.552,124.971 86.483,153.73 14.942,28.775 -3.32,45.375 -24.901,40.396")
+        ;
+    var scale = 1 / 1024;
+    hand
+        .attr("transform", "translate(" + point.x + "," + point.y + ") translate(0.6 0.4) scale(" + -scale + " " + scale + ") rotate(180) translate(-512 -512)")
+        ;
+    return hand;
+}
+
 LevelView.prototype.createLevel = function(parent) {
     var level = this.level;
     var w = level.width + 2;
@@ -395,6 +423,11 @@ LevelView.prototype.createLevel = function(parent) {
     this.createBoard(board);
     if (SHOW_LABELS) {
         this.createCellLabels(board);
+    }
+    for (var i = 0; i < level.hands.length; i++) {
+        var index = level.hands[i];
+        var hand = this.createHand(board, index);
+        this.hands.push(hand);
     }
     for (var i = 0; i < level.targets.length; i++) {
         var index = level.targets[i];
