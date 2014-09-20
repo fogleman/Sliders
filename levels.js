@@ -1,4 +1,4 @@
-var levels = [
+var LEVELS = [
     {
         width: 5,
         height: 5,

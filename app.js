@@ -31,7 +31,7 @@ var ARROW_KEYS = {
 
 // Level
 function Level(number) {
-    _.extend(this, levels[number]);
+    _.extend(this, LEVELS[number - 1]);
     this.number = number;
     this.selection = 0;
     this.moves = 0;
@@ -185,7 +185,7 @@ Level.prototype.undoMove = function() {
     return move;
 }
 
-Level.prototype.gameOver = function() {
+Level.prototype.complete = function() {
     for (var i = 0; i < this.targets.length; i++) {
         if (this.pieces[i] !== this.targets[i]) {
             return false;
@@ -548,8 +548,22 @@ Controller.prototype.bindEvents = function() {
 }
 
 Controller.prototype.setLabels = function() {
-    d3.select("#label-level").text(this.level.number + 1);
+    var best = this.getBest(this.level.number);
+    if (best === 0) {
+        best = "-";
+    }
+    else {
+        var delta = best - this.level.par;
+        if (delta === 0) {
+            best = '<span class="glyphicon glyphicon-star"></span>';
+        }
+        else {
+            best = "+" + delta;
+        }
+    }
+    d3.select("#label-level").text(this.level.number);
     d3.select("#label-par").text(this.level.par);
+    d3.select("#label-best").html(best);
     d3.select("#label-moves").text(this.level.moves);
 }
 
@@ -573,14 +587,14 @@ Controller.prototype.loadLevel = function(number) {
 Controller.prototype.nextLevel = function(previous) {
     var n = previous ? -1 : 1;
     var number = this.level.number + n;
-    number = Math.max(0, number);
-    number = Math.min(levels.length - 1, number);
-    window.location.hash = "" + (number + 1);
+    number = Math.max(1, number);
+    number = Math.min(LEVELS.length, number);
+    window.location.hash = "" + number;
 }
 
 Controller.prototype.hashChange = function() {
     number = parseInt(window.location.hash.substring(1));
-    number = isNaN(number) ? 0 : number - 1;
+    number = isNaN(number) ? 1 : number;
     this.loadLevel(number);
 }
 
@@ -605,10 +619,10 @@ Controller.prototype.movePiece = function(piece, direction) {
     var b = this.level.computeMove(piece, direction);
     this.level.doMove(piece, direction);
     this.levelView.doMove(piece, a, b);
-    this.setLabels();
-    if (this.level.gameOver()) {
-        this.gameOver();
+    if (this.level.complete()) {
+        this.complete();
     }
+    this.setLabels();
 }
 
 Controller.prototype.moveSelectedPiece = function(direction) {
@@ -616,7 +630,24 @@ Controller.prototype.moveSelectedPiece = function(direction) {
     this.movePiece(piece, direction);
 }
 
-Controller.prototype.gameOver = function() {
+Controller.prototype.getBest = function(number) {
+    var key = "best" + number;
+    var moves = parseInt(localStorage[key]);
+    moves = isNaN(moves) ? 0 : moves;
+    return moves;
+}
+
+Controller.prototype.setBest = function(number, moves) {
+    var best = this.getBest(number);
+    if (best !== 0 && best <= moves) {
+        return;
+    }
+    var key = "best" + number;
+    localStorage[key] = moves;
+}
+
+Controller.prototype.complete = function() {
+    this.setBest(this.level.number, this.level.moves);
     this.levelView.doWin();
     var self = this;
     setTimeout(function() {
