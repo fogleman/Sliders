@@ -37,8 +37,8 @@ function Level(number) {
     this.height = data.height;
     this.goal = data.goal;
     this.walls = data.walls ? data.walls.slice() : [];
-    this.pieces = data.pieces.slice();
-    this.targets = data.targets.slice();
+    this.pieces = data.pieces ? data.pieces.slice() : [];
+    this.targets = data.targets ? data.targets.slice() : [];
     this.hands = data.hands ? data.hands.slice() : [];
     this.shape = data.shape ? data.shape.slice() : undefined;
     this.info = data.info ? data.info : "";

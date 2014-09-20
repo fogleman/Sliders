@@ -4,6 +4,30 @@ var LEVELS = [
     {
         width: 5,
         height: 5,
+        goal: 2,
+        pieces: [0],
+        targets: [24],
+        info: "Slide the red piece to the target."
+    },
+    {
+        width: 3,
+        height: 5,
+        goal: 2,
+        pieces: [1, 10, 12, 14],
+        targets: [13],
+        info: "The pieces move until they hit something."
+    },
+    {
+        width: 4,
+        height: 4,
+        goal: 4,
+        pieces: [0, 1, 2, 3],
+        targets: [12, 13, 14, 15],
+        info: "There can be multiple targets."
+    },
+    {
+        width: 5,
+        height: 5,
         walls: [
             [12, 17]
         ],
@@ -17,8 +41,7 @@ var LEVELS = [
             "xxxxx",
             "xxxxx",
             ".xxx.",
-        ],
-        info: "Slide the red piece to the red target."
+        ]
     },
     {
         width: 5,
