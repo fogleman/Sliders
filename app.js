@@ -32,7 +32,7 @@ var ARROW_KEYS = {
 // Level
 function Level(number) {
     // level data
-    var data = LEVELS[number - 1];
+    var data = number < 0 ? ricochet() : LEVELS[number - 1];
     this.width = data.width;
     this.height = data.height;
     this.goal = data.goal;
@@ -696,7 +696,8 @@ Controller.prototype.nextLevel = function(previous) {
 }
 
 Controller.prototype.onHashChange = function() {
-    number = parseInt(window.location.hash.substring(1));
+    var hash = window.location.hash.substring(1);
+    var number = hash === "rr" ? -1 : parseInt(hash);
     number = isNaN(number) ? 1 : number;
     this.loadLevel(number);
 }
