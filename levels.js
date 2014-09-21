@@ -7,7 +7,7 @@ var LEVELS = [
         goal: 2,
         pieces: [0],
         targets: [24],
-        info: "Slide the red piece to the target."
+        info: "Slide the red piece onto the target."
     },
     {
         width: 3,

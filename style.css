@@ -19,16 +19,6 @@ body {
     height: 100%;
 }
 
-#side {
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 250px;
-    background: white;
-    box-shadow: 0 0 10px #888888;
-}
-
 #footer {
     position: fixed;
     left: 0;
@@ -45,6 +35,26 @@ body {
     color: #999;
 }
 
-#footer span {
+#footer p {
+    margin: 0;
     font-size: 24pt;
+}
+
+#footer button {
+    padding: 14px 20px;
+}
+
+#footer .dropdown-menu {
+    font-size: 150%;
+    font-weight: lighter;
+}
+
+#footer .shortcut {
+    color: #aaa;
+    float: right;
+    font-family: monospace;
+}
+
+#footer ul {
+    width: 200px;
 }

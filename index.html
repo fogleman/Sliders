@@ -11,30 +11,44 @@
     <div id="board">
         <svg id="view"></svg>
     </div>
-    <!-- <div id="side"></div> -->
     <div id="footer">
         <div class="container-fluid">
             <div class="row">
-                <div class="col-xs-3">
+                <div class="col-xs-3 col-md-2 col-md-offset-2">
                     <h6>LEVEL</h6>
-                    <span id="label-level">-</span>
+                    <p id="label-level">-</p>
                 </div>
-                <div class="col-xs-3">
+                <div class="col-xs-3 col-md-2">
                     <h6>GOAL</h6>
-                    <span id="label-goal">-</span>
+                    <p id="label-goal">-</p>
                 </div>
-                <div class="col-xs-3">
-                    <h6>BEST</h6>
-                    <span id="label-best">-</span>
-                </div>
-                <div class="col-xs-3">
+                <div class="col-xs-3 col-md-2">
                     <h6>MOVES</h6>
-                    <span id="label-moves">-</span>
+                    <p id="label-moves">-</p>
+                </div>
+                <div class="col-xs-3 col-md-2">
+                    <div class="btn-group dropup">
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-right">
+                            <li><a href="" onclick="menuUndo(); return false;"><span class="glyphicon glyphicon-arrow-left"></span> <span class="shortcut">U</span> Undo</a></li>
+                            <li><a href="" onclick="menuRestart(); return false;"><span class="glyphicon glyphicon-repeat"></span> <span class="shortcut">R</span> Restart</a></li>
+                            <li class="divider"></li>
+                            <li><a href="" onclick="menuLevels(); return false;"><span class="glyphicon glyphicon-list"></span> <span class="shortcut">L</span> Levels</a></li>
+                            <li><a href="" onclick="menuPrevious(); return false;"><span class="glyphicon glyphicon-chevron-left"></span> <span class="shortcut">P</span> Previous</a></li>
+                            <li><a href="" onclick="menuNext(); return false;"><span class="glyphicon glyphicon-chevron-right"></span> <span class="shortcut">N</span> Next</a></li>
+                            <li class="divider"></li>
+                            <li><a href="" onclick="menuAbout(); return false;"><span class="glyphicon glyphicon-info-sign"></span> <span class="shortcut">A</span> About</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </body>
+<script src="jquery.min.js"></script>
+<script src="bootstrap/js/bootstrap.min.js"></script>
 <script src="d3.min.js"></script>
 <script src="levels.js"></script>
 <script src="app.js"></script>

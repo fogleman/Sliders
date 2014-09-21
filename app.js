@@ -571,27 +571,35 @@ Controller.prototype.bindEvents = function() {
     });
     body.on("keydown", function() {
         var code = d3.event.keyCode;
-        if (code === 9) { // tab
-            d3.event.preventDefault();
+        if (d3.event.ctrlKey || d3.event.altKey || d3.event.metaKey) {
+            return;
+        }
+        else if (code === 9) { // tab
             self.nextSelection(d3.event.shiftKey);
         }
-        if (code == 85) { // u
-            d3.event.preventDefault();
+        else if (d3.event.shiftKey) {
+            return;
+        }
+        else if (code == 85) { // U
             self.undoMove();
         }
-        if (ARROW_KEYS.hasOwnProperty(code)) {
-            d3.event.preventDefault();
+        else if (code == 82) { // R
+            self.restartLevel();
+        }
+        else if (code === 80) { // P
+            self.nextLevel(true);
+        }
+        else if (code === 78) { // N
+            self.nextLevel(false);
+        }
+        else if (ARROW_KEYS.hasOwnProperty(code)) {
             var direction = ARROW_KEYS[code];
             self.moveSelectedPiece(direction);
         }
-        if (code === 189) { // minus
-            d3.event.preventDefault();
-            self.nextLevel(true);
+        else {
+            return;
         }
-        if (code === 187) { // plus
-            d3.event.preventDefault();
-            self.nextLevel(false);
-        }
+        d3.event.preventDefault();
     });
     this.dragData = {};
     this.drag = d3.behavior.drag()
@@ -675,6 +683,10 @@ Controller.prototype.loadLevel = function(number) {
     this.setLabels();
 }
 
+Controller.prototype.restartLevel = function() {
+    this.loadLevel(this.level.number);
+}
+
 Controller.prototype.nextLevel = function(previous) {
     var n = previous ? -1 : 1;
     var number = this.level.number + n;
@@ -746,10 +758,26 @@ Controller.prototype.onComplete = function() {
     }, 2000);
 }
 
-// main
-function main() {
-    // localStorage.clear();
-    new Controller();
+var controller = new Controller();
+
+function menuUndo() {
+    controller.undoMove();
 }
 
-main();
+function menuRestart() {
+    controller.restartLevel();
+}
+
+function menuLevels() {
+}
+
+function menuPrevious() {
+    controller.nextLevel(true);
+}
+
+function menuNext() {
+    controller.nextLevel(false);
+}
+
+function menuAbout() {
+}
